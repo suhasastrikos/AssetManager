@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Settings } from 'lucide-react';
+import { Plus, Search, Filter, Settings, Upload } from 'lucide-react';
 import { DeviceProfile } from '../types';
 import { DeviceProfileForm } from '../components/forms/DeviceProfileForm';
 import { DeviceProfileTable } from '../components/tables/DeviceProfileTable';
+import { ImportDialog } from '../components/common/ImportDialog';
 import { deviceProfileService } from '../services/deviceProfileService';
 import { useApi, useApiMutation } from '../hooks/useApi';
 
@@ -11,6 +12,7 @@ export const DeviceProfiles: React.FC = () => {
   const [editingProfile, setEditingProfile] = useState<DeviceProfile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   const { data: profilesData, loading, refetch } = useApi(
     () => deviceProfileService.getAll({ search: searchTerm, deviceType: typeFilter }),
@@ -33,6 +35,17 @@ export const DeviceProfiles: React.FC = () => {
 
   const profiles = profilesData?.data || [];
   const deviceTypes = ['Sensor', 'Gateway', 'Controller', 'Actuator', 'Camera', 'Meter', 'Tracker', 'Other'];
+
+  const sampleDeviceProfile = {
+    name: 'Sample Temperature Sensor',
+    description: 'A sample device profile for temperature monitoring',
+    deviceType: 'Sensor',
+    manufacturer: 'SensorTech',
+    model: 'TEMP-2024',
+    firmwareVersion: '1.0.0',
+    transportType: 'MQTT',
+    specifications: 'Temperature range: -40°C to 85°C, Accuracy: ±0.5°C'
+  };
 
   const handleSubmit = async (data: Omit<DeviceProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
@@ -74,6 +87,17 @@ export const DeviceProfiles: React.FC = () => {
     setShowForm(true);
   };
 
+  const handleImport = async (data: any[], format: string) => {
+    try {
+      const importPromises = data.map(item => createProfile(item));
+      await Promise.all(importPromises);
+      refetch();
+    } catch (error) {
+      console.error('Failed to import profiles:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -82,13 +106,22 @@ export const DeviceProfiles: React.FC = () => {
           <p className="text-gray-600">Manage device profile templates and specifications</p>
         </div>
         {!showForm && (
-          <button
-            onClick={handleNewProfile}
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Profile</span>
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => setShowImportDialog(true)}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            >
+              <Upload className="h-4 w-4" />
+              <span>Import</span>
+            </button>
+            <button
+              onClick={handleNewProfile}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Profile</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -155,6 +188,14 @@ export const DeviceProfiles: React.FC = () => {
           />
         </>
       )}
+
+      <ImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImport}
+        entityType="Device Profiles"
+        sampleData={sampleDeviceProfile}
+      />
     </div>
   );
 };

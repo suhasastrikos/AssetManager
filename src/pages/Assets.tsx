@@ -1,8 +1,9 @@
 import React from 'react';
-import { Plus, Search, Filter, Package } from 'lucide-react';
+import { Plus, Search, Filter, Package, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { Asset } from '../types';
 import { AssetForm } from '../components/forms/AssetForm';
+import { ImportDialog } from '../components/common/ImportDialog';
 import { assetService } from '../services/assetService';
 import { useApi, useApiMutation } from '../hooks/useApi';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
@@ -12,6 +13,7 @@ export const Assets: React.FC = () => {
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   const { data: assetsData, loading, refetch } = useApi(
     () => assetService.getAll({ search: searchTerm, type: typeFilter }),
@@ -30,6 +32,14 @@ export const Assets: React.FC = () => {
 
   const assets = assetsData?.data || [];
   const assetTypes = ['Building', 'Room', 'Floor', 'Vehicle', 'Equipment', 'Sensor Group', 'Other'];
+
+  const sampleAsset = {
+    name: 'Sample Building A',
+    description: 'Main office building with smart systems',
+    label: 'BLDG-A-001',
+    assetProfileId: 'profile-id-here',
+    type: 'Building'
+  };
 
   const handleSubmit = async (data: Omit<Asset, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
@@ -56,6 +66,17 @@ export const Assets: React.FC = () => {
     setShowForm(true);
   };
 
+  const handleImport = async (data: any[], format: string) => {
+    try {
+      const importPromises = data.map(item => createAsset(item));
+      await Promise.all(importPromises);
+      refetch();
+    } catch (error) {
+      console.error('Failed to import assets:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -64,13 +85,22 @@ export const Assets: React.FC = () => {
           <p className="text-gray-600">Track and manage your physical assets</p>
         </div>
         {!showForm && (
-          <button
-            onClick={handleNewAsset}
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Asset</span>
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => setShowImportDialog(true)}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            >
+              <Upload className="h-4 w-4" />
+              <span>Import</span>
+            </button>
+            <button
+              onClick={handleNewAsset}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Asset</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -194,6 +224,14 @@ export const Assets: React.FC = () => {
           )}
         </>
       )}
+
+      <ImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImport}
+        entityType="Assets"
+        sampleData={sampleAsset}
+      />
     </div>
   );
 };

@@ -1,9 +1,10 @@
 import React from 'react';
-import { Plus, Search, Filter, Smartphone } from 'lucide-react';
+import { Plus, Search, Filter, Smartphone, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { Device } from '../types';
 import { DeviceForm } from '../components/forms/DeviceForm';
 import { DeviceTable } from '../components/tables/DeviceTable';
+import { ImportDialog } from '../components/common/ImportDialog';
 import { deviceService } from '../services/deviceService';
 import { useApi, useApiMutation } from '../hooks/useApi';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
@@ -13,6 +14,7 @@ export const Devices: React.FC = () => {
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   const { data: devicesData, loading, refetch } = useApi(
     () => deviceService.getAll({ search: searchTerm, type: typeFilter }),
@@ -35,6 +37,15 @@ export const Devices: React.FC = () => {
 
   const devices = devicesData?.data || [];
   const deviceTypes = ['Sensor', 'Gateway', 'Controller', 'Actuator', 'Camera', 'Meter', 'Tracker', 'Other'];
+
+  const sampleDevice = {
+    name: 'Sample Temperature Sensor',
+    description: 'Temperature monitoring device for HVAC system',
+    label: 'TEMP-001',
+    deviceProfileId: 'profile-id-here',
+    assetId: 'asset-id-here',
+    type: 'Sensor'
+  };
 
   const handleSubmit = async (data: Omit<Device, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
@@ -76,6 +87,17 @@ export const Devices: React.FC = () => {
     setShowForm(true);
   };
 
+  const handleImport = async (data: any[], format: string) => {
+    try {
+      const importPromises = data.map(item => createDevice(item));
+      await Promise.all(importPromises);
+      refetch();
+    } catch (error) {
+      console.error('Failed to import devices:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -84,13 +106,22 @@ export const Devices: React.FC = () => {
           <p className="text-gray-600">Monitor and manage IoT devices connected to assets</p>
         </div>
         {!showForm && (
-          <button
-            onClick={handleNewDevice}
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Device</span>
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => setShowImportDialog(true)}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            >
+              <Upload className="h-4 w-4" />
+              <span>Import</span>
+            </button>
+            <button
+              onClick={handleNewDevice}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Device</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -157,6 +188,14 @@ export const Devices: React.FC = () => {
           />
         </>
       )}
+
+      <ImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImport}
+        entityType="Devices"
+        sampleData={sampleDevice}
+      />
     </div>
   );
 };
