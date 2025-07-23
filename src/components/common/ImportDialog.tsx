@@ -169,6 +169,167 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const getRequiredFields = () => {
+    const fieldMappings = {
+      'Asset Profiles': [
+        '• name (string) - Profile name',
+        '• description (string) - Detailed description',
+        '• type (string) - Asset type (Building, Room, Floor, Vehicle, Equipment, etc.)',
+        '• manufacturer (string) - Manufacturer name',
+        '• model (string) - Model number/name',
+        '• specifications (string) - Technical specifications'
+      ],
+      'Device Profiles': [
+        '• name (string) - Profile name',
+        '• description (string) - Detailed description',
+        '• deviceType (string) - Device type (Sensor, Gateway, Controller, etc.)',
+        '• manufacturer (string) - Manufacturer name',
+        '• model (string) - Model number/name',
+        '• firmwareVersion (string) - Firmware version',
+        '• transportType (string) - Transport protocol (MQTT, HTTP, CoAP, LWM2M)',
+        '• specifications (string) - Technical specifications'
+      ],
+      'Assets': [
+        '• name (string) - Asset name',
+        '• description (string) - Detailed description',
+        '• label (string) - Unique asset label/identifier',
+        '• assetProfileId (string) - ID of the asset profile to use',
+        '• type (string) - Asset type',
+        '• parentAssetId (string, optional) - ID of parent asset for hierarchy'
+      ],
+      'Devices': [
+        '• name (string) - Device name',
+        '• description (string) - Detailed description',
+        '• label (string) - Unique device label/identifier',
+        '• deviceProfileId (string) - ID of the device profile to use',
+        '• assetId (string) - ID of the parent asset',
+        '• type (string) - Device type'
+      ]
+    };
+
+    const fields = fieldMappings[entityType as keyof typeof fieldMappings] || [];
+    return (
+      <ul className="space-y-1">
+        {fields.map((field, index) => (
+          <li key={index}>{field}</li>
+        ))}
+      </ul>
+    );
+  };
+
+  const getJsonExample = () => {
+    const examples = {
+      'Asset Profiles': `[
+  {
+    "name": "Smart Building Profile",
+    "description": "Profile for smart office buildings",
+    "type": "Building",
+    "manufacturer": "ACME Corp",
+    "model": "SmartBuild-2024",
+    "specifications": "IoT-enabled with sensors and automation"
+  }
+]`,
+      'Device Profiles': `[
+  {
+    "name": "Temperature Sensor Profile",
+    "description": "Profile for temperature monitoring devices",
+    "deviceType": "Sensor",
+    "manufacturer": "SensorTech",
+    "model": "TEMP-2024",
+    "firmwareVersion": "1.0.0",
+    "transportType": "MQTT",
+    "specifications": "Range: -40°C to 85°C, Accuracy: ±0.5°C"
+  }
+]`,
+      'Assets': `[
+  {
+    "name": "Main Office Building",
+    "description": "Primary office building with smart systems",
+    "label": "BLDG-001",
+    "assetProfileId": "profile-uuid-here",
+    "type": "Building"
+  }
+]`,
+      'Devices': `[
+  {
+    "name": "Lobby Temperature Sensor",
+    "description": "Temperature sensor in main lobby",
+    "label": "TEMP-LOBBY-001",
+    "deviceProfileId": "device-profile-uuid-here",
+    "assetId": "asset-uuid-here",
+    "type": "Sensor"
+  }
+]`
+    };
+    return examples[entityType as keyof typeof examples] || '';
+  };
+
+  const getCsvExample = () => {
+    const examples = {
+      'Asset Profiles': `name,description,type,manufacturer,model,specifications
+"Smart Building Profile","Profile for smart office buildings","Building","ACME Corp","SmartBuild-2024","IoT-enabled with sensors and automation"`,
+      'Device Profiles': `name,description,deviceType,manufacturer,model,firmwareVersion,transportType,specifications
+"Temperature Sensor Profile","Profile for temperature monitoring devices","Sensor","SensorTech","TEMP-2024","1.0.0","MQTT","Range: -40°C to 85°C, Accuracy: ±0.5°C"`,
+      'Assets': `name,description,label,assetProfileId,type,parentAssetId
+"Main Office Building","Primary office building with smart systems","BLDG-001","profile-uuid-here","Building",""`,
+      'Devices': `name,description,label,deviceProfileId,assetId,type
+"Lobby Temperature Sensor","Temperature sensor in main lobby","TEMP-LOBBY-001","device-profile-uuid-here","asset-uuid-here","Sensor"`
+    };
+    return examples[entityType as keyof typeof examples] || '';
+  };
+
+  const getXmlExample = () => {
+    const examples = {
+      'Asset Profiles': `<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <name>Smart Building Profile</name>
+    <description>Profile for smart office buildings</description>
+    <type>Building</type>
+    <manufacturer>ACME Corp</manufacturer>
+    <model>SmartBuild-2024</model>
+    <specifications>IoT-enabled with sensors and automation</specifications>
+  </item>
+</root>`,
+      'Device Profiles': `<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <name>Temperature Sensor Profile</name>
+    <description>Profile for temperature monitoring devices</description>
+    <deviceType>Sensor</deviceType>
+    <manufacturer>SensorTech</manufacturer>
+    <model>TEMP-2024</model>
+    <firmwareVersion>1.0.0</firmwareVersion>
+    <transportType>MQTT</transportType>
+    <specifications>Range: -40°C to 85°C, Accuracy: ±0.5°C</specifications>
+  </item>
+</root>`,
+      'Assets': `<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <name>Main Office Building</name>
+    <description>Primary office building with smart systems</description>
+    <label>BLDG-001</label>
+    <assetProfileId>profile-uuid-here</assetProfileId>
+    <type>Building</type>
+    <parentAssetId></parentAssetId>
+  </item>
+</root>`,
+      'Devices': `<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <name>Lobby Temperature Sensor</name>
+    <description>Temperature sensor in main lobby</description>
+    <label>TEMP-LOBBY-001</label>
+    <deviceProfileId>device-profile-uuid-here</deviceProfileId>
+    <assetId>asset-uuid-here</assetId>
+    <type>Sensor</type>
+  </item>
+</root>`
+    };
+    return examples[entityType as keyof typeof examples] || '';
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
