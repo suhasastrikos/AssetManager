@@ -259,13 +259,35 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
             )}
 
             {/* Format Guidelines */}
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h4 className="text-sm font-medium text-yellow-800 mb-2">Format Guidelines:</h4>
-              <ul className="text-xs text-yellow-700 space-y-1">
-                <li>• <strong>JSON:</strong> Array of objects with matching field names</li>
-                <li>• <strong>CSV:</strong> First row as headers, subsequent rows as data</li>
-                <li>• <strong>XML:</strong> Root element with multiple &lt;item&gt; elements</li>
-              </ul>
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="text-sm font-medium text-blue-800 mb-3">Required Fields for {entityType}:</h4>
+              <div className="text-xs text-blue-700 space-y-2">
+                {getRequiredFields()}
+                
+                <div className="mt-3 pt-3 border-t border-blue-200">
+                  <h5 className="font-medium mb-2">Format Examples:</h5>
+                  <div className="space-y-2">
+                    <div>
+                      <strong>JSON:</strong> Array of objects
+                      <pre className="mt-1 p-2 bg-blue-100 rounded text-xs overflow-x-auto">
+{getJsonExample()}
+                      </pre>
+                    </div>
+                    <div>
+                      <strong>CSV:</strong> Header row + data rows
+                      <pre className="mt-1 p-2 bg-blue-100 rounded text-xs overflow-x-auto">
+{getCsvExample()}
+                      </pre>
+                    </div>
+                    <div>
+                      <strong>XML:</strong> Root with item elements
+                      <pre className="mt-1 p-2 bg-blue-100 rounded text-xs overflow-x-auto">
+{getXmlExample()}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
