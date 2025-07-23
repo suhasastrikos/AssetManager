@@ -25,7 +25,9 @@ export const Home: React.FC = () => {
         const status = await databaseService.getConnectionStatus();
         setDbConnection(status);
       } catch (error) {
-        console.error('Failed to check connection status:', error);
+        // Silently handle network errors when backend is not available
+        // This is expected when no backend server is running
+        setDbConnection({ isConnected: false });
       }
     };
     checkConnection();
